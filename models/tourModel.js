@@ -92,15 +92,40 @@ tourSchema.pre('save', function(next) {
   next();
 });
 
-tourSchema.pre('save', function(next) {
-  console.log('will save document... ');
+// tourSchema.pre('save', function(next) {
+//   console.log('will save document... ');
+//   next();
+// });
+
+// tourSchema.post('save', function(doc, next) {
+//   console.log(doc);
+//   next();
+// });
+
+// Query Middleware
+
+// tourSchema.pre('find', function(next) {
+tourSchema.pre(/^find/, function(next) {
+  this.find({ secretTour: { $ne: true } });
+
+  this.start = Date.now();
   next();
 });
 
-tourSchema.post('save', function(doc, next) {
-  console.log(doc);
+tourSchema.post(/^find/, function(docs, next) {
+  console.log(`Query took  ${Date.now() - this.start} milliseconds`);
+
   next();
 });
+
+// Aggregation Middleware
+
+tourSchema.pre('aggregate', function(next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  console.log(this.pipeline());
+  next();
+});
+
 const Tour = new mongoose.model('Tour', tourSchema);
 
 module.exports = Tour;
